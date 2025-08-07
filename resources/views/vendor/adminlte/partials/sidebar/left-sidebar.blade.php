@@ -18,8 +18,43 @@
                 @if(!config('adminlte.sidebar_nav_accordion'))
                     data-accordion="false"
                 @endif>
-                {{-- Configured sidebar links --}}
-               
+
+                {{-- First Google Link --}}
+                @php
+                    $item = [
+                        'text' => 'Google',
+                        'class' => 'nav-link',
+                        'href' => 'https://google.com',
+                        'icon' => 'fas fa-globe',
+                        'target' => '_blank',
+                    ];
+                @endphp
+                @include('adminlte::partials.sidebar.menu-item-link', compact('item'))
+
+                {{-- Second Google Link --}}
+                @php
+                    $item = [
+                        'text' => 'Another Google',
+                        'class' => 'nav-link',
+                        'href' => 'https://google.com',
+                        'icon' => 'fas fa-globe',
+                        'target' => '_blank',
+                    ];
+                @endphp
+                @include('adminlte::partials.sidebar.menu-item-link', compact('item'))
+
+                {{-- Third Google Link --}}
+                @php
+                    $item = [
+                        'text' => 'Yet Another Google',
+                        'class' => 'nav-link',
+                        'href' => 'https://google.com',
+                        'icon' => 'fas fa-globe',
+                        'target' => '_blank',
+                    ];
+                @endphp
+                @include('adminlte::partials.sidebar.menu-item-link', compact('item'))
+
             </ul>
         </nav>
     </div>

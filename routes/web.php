@@ -12,4 +12,6 @@ Route::get('/logout', [UserController::class, 'logout']);
 
 Route::middleware(Auth::class)->group(function () {
     Route::get('/home', [HomeController::class, 'home']);
+
+    // Route::get('/')
 });
