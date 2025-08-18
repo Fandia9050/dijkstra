@@ -10,4 +10,6 @@ class DeliveryLocation extends Model
     use HasUuids;
 
     protected $guarded = [];
+
+    protected $table = 'delivery_locations';
 }

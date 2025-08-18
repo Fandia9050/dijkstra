@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class UserController extends Controller
 {
     public function index(){
-        return view(('vendor.adminlte.auth.login'));
+        return view(('auth.login'));
     }
 
     public function login(LoginRequest $request){
@@ -37,5 +37,44 @@ class UserController extends Controller
     public function logout(){
         Auth::logout();
         return redirect('/');
+    }
+
+    public function viewUsers(){
+        $users = User::with('roles')->get();
+
+        return view('users.index', compact('users'));
+    }
+
+    public function store(Request $request){
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string'
+        ]);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password)
+        ]);
+        return redirect('/users')->with('success', 'Successfully added user');
+    }
+
+    public function userDelete(User $user){
+        $user->delete();
+        return redirect()->back()->with('success', 'Successfully deleted user');
+    }
+
+    public function userUpdate(Request $request, User $user){
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'password' => 'required|nullable'
+        ]);
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password)
+        ]);
+        return redirect()->back()->with('success', 'Successfully updated user');
     }
 }

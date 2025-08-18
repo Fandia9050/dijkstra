@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\RolePermission;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\UserRole;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +16,46 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Buat User Admin
+        $user = User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Admin',
+                'password' => bcrypt('Admin123@'),
+            ]
+        );
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        // Buat Permissions
+        $permissions = [
+            'create-users',
+            'edit-users',
+            'delete-users',
+            'view-users',
+            'create-roles',
+            'edit-roles',
+            'delete-roles',
+            'view-roles',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // Buat Role
+        $role = Role::firstOrCreate(['name' => 'Admin']);
+
+        // Hubungkan Role dengan semua Permissions
+        foreach (Permission::all() as $permission) {
+            RolePermission::firstOrCreate([
+                'role_id' => $role->id,
+                'permission_id' => $permission->id,
+            ]);
+        }
+
+        // Hubungkan User dengan Role Admin
+        UserRole::firstOrCreate([
+            'user_id' => $user->id,
+            'role_id' => $role->id,
+        ]);
     }
 }

@@ -9,8 +9,11 @@ class Dijkstra
     public function __construct($edges)
     {
         foreach ($edges as $edge) {
-            $this->graph[$edge->from_location_id][$edge->to_location_id] = $edge->weight;
+            $this->graph[$edge->from_location_id][$edge->to_location_id] = $edge->distance_km;
+            // jika graf dua arah:
+            $this->graph[$edge->to_location_id][$edge->from_location_id] = $edge->distance_km;
         }
+        
     }
 
     public function shortestPath($start, $end)
@@ -34,9 +37,7 @@ class Dijkstra
                 }
             }
 
-            if ($dist[$minNode] === INF) {
-                break;
-            }
+            if ($dist[$minNode] === INF) break;
 
             foreach ($this->graph[$minNode] ?? [] as $neighbor => $cost) {
                 $alt = $dist[$minNode] + $cost;
@@ -63,6 +64,40 @@ class Dijkstra
         return [
             'distance' => $dist[$end],
             'path' => $path
+        ];
+    }
+
+    // Cari rute multi tujuan
+    public function shortestPathMultiple($start, array $destinations)
+    {
+        $fullPath = [];
+        $totalDistance = 0;
+        $currentStart = $start;
+
+        foreach ($destinations as $destination) {
+            $result = $this->shortestPath($currentStart, $destination);
+
+            if (empty($result['path'])) {
+                return [
+                    'distance' => null,
+                    'path' => [],
+                    'error' => "Tidak ditemukan rute dari $currentStart ke $destination"
+                ];
+            }
+
+            // Hindari duplikasi titik awal
+            if (!empty($fullPath)) {
+                array_shift($result['path']);
+            }
+
+            $fullPath = array_merge($fullPath, $result['path']);
+            $totalDistance += $result['distance'];
+            $currentStart = $destination;
+        }
+
+        return [
+            'distance' => $totalDistance,
+            'path' => $fullPath
         ];
     }
 }
