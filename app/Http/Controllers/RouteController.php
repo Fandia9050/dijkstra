@@ -21,52 +21,7 @@ class RouteController extends Controller
         ]);
     }
 
-    // public function shortest(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'start' => 'required|exists:delivery_locations,id',
-    //         'end'   => 'required|exists:delivery_locations,id|different:start',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json(['error' => $validator->errors()->first()], 422);
-    //     }
-
-    //     $start = $request->input('start');
-    //     $end   = $request->input('end');
-
-    //     // Ambil semua edges untuk graph
-    //     $edges = LocationEdges::all();
-
-    //     $dijkstra = new Dijkstra($edges);
-    //     $result = $dijkstra->shortestPath($start, $end);
-
-    //     if (empty($result) || empty($result['path'])) {
-    //         return response()->json(['error' => 'No route found'], 404);
-    //     }
-
-    //     // Ambil lokasi sesuai urutan path
-    //     // Pastikan id di path berupa string atau integer sesuai tipe di DB
-    //     $orderIds = array_map(fn($id) => "'" . $id . "'", $result['path']);
-
-    //     $locations = DeliveryLocation::whereIn('id', $result['path'])
-    //         ->orderByRaw("FIELD(id, " . implode(',', $orderIds) . ")")
-    //         ->get(['id', 'name', 'latitude', 'longitude']);
-
-    //     // Map ke array sederhana untuk JS
-    //     $coords = $locations->map(fn($loc) => [
-    //         'id' => $loc->id,
-    //         'name' => $loc->name,
-    //         'lat' => (float) $loc->latitude,
-    //         'lng' => (float) $loc->longitude,
-    //     ])->toArray();
-
-    //     return response()->json([
-    //         'path' => $result['path'],
-    //         'distance' => $result['distance'],
-    //         'coords' => $coords,
-    //     ]);
-    // }
+   
 
     public function shortest(Request $request)
 {
@@ -82,8 +37,9 @@ class RouteController extends Controller
 
     $start = $request->input('start');
     $destinations = $request->input('destinations');
-
+    
     $edges = LocationEdges::all();
+    
     $dijkstra = new Dijkstra($edges);
 
     $result = $dijkstra->multiStopPath($start, $destinations);
@@ -138,8 +94,15 @@ class RouteController extends Controller
         $start        = (string) $request->input('start');
         $destinations = array_values(array_unique(array_map('strval', $request->input('locations', []))));
 
+        $nodes = array_merge([$start], $destinations);
+
+        $edges = LocationEdges::whereIn('from_location_id', $nodes)
+            ->whereIn('to_location_id', $nodes)
+            ->get();
+
+
         // (Opsional) Auto-generate edges jika tabel kosong
-        if (LocationEdges::count() === 0) {
+        if ($edges->isEmpty()) {
             $this->seedEdgesFromLocations();
         }
 
@@ -149,6 +112,7 @@ class RouteController extends Controller
         // Jalankan Dijkstra multi-tujuan
         $dijkstra = new Dijkstra($edges); // pastikan constructor kamu baca $edge->from_location_id, ->to_location_id, ->distance_km
         $result   = $dijkstra->shortestPathMultiple($start, $destinations);
+
 
         if (empty($result['path'])) {
             return response()->json(['error' => 'No route found'], 404);
