@@ -41,6 +41,19 @@
     .select2-container {
         width: 100% !important;
     }
+
+    .custom-tooltip {
+        background: white;
+        border: none;
+        border-radius: 12px;
+        padding: 6px 10px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        color: #111;
+    }
+
+    .custom-tooltip::before {
+        border-top-color: white !important;
+    }
 </style>
 <link rel="stylesheet" href="{{ asset('css/select2.min.css') }}" />
 @endsection @section("content")
@@ -171,13 +184,51 @@
 
                 const bounds = [];
 
-                // Pasang marker sesuai urutan
-                res.path.forEach((p, idx) => {
-                    const m = L.marker([p.lat, p.lng])
-                        .addTo(layerMarkers)
-                        .bindPopup(`<b>${idx + 1}. ${p.name}</b>`);
-                    bounds.push([p.lat, p.lng]);
-                });
+              res.path.forEach((p, idx) => {
+                const latlng = [p.lat, p.lng];
+
+                // marker
+                const marker = L.marker(latlng).addTo(layerMarkers);
+
+                // blue highlight circle
+                L.circle(latlng, {
+                    color: '#2563eb',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.25,
+                    radius: 180,
+                    weight: 3,
+                }).addTo(layerMarkers);
+
+                // permanent label
+                marker.bindTooltip(
+                    `
+                    <div style="
+                        min-width:140px;
+                        font-size:13px;
+                    ">
+                        <div style="
+                            font-weight:700;
+                            margin-bottom:4px;
+                        ">
+                            ${idx + 1}. ${p.name}
+                        </div>
+
+                        <div>
+                            ${p.lat.toFixed(5)},
+                            ${p.lng.toFixed(5)}
+                        </div>
+                    </div>
+                    `,
+                    {
+                        permanent: true,
+                        direction: 'top',
+                        offset: [0, -20],
+                        className: 'custom-tooltip',
+                    }
+                );
+
+                bounds.push(latlng);
+            });
 
                 // Jika backend mengembalikan koordinat per-edge
                 if (Array.isArray(res.edges) && res.edges.length > 0) {
